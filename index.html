@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCL TBC Stats - Análise de Evolução de Players</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .upload-box {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .upload-box:hover {
+            border-color: #764ba2;
+            background: #f0f4ff;
+        }
+
+        .upload-box label {
+            display: block;
+            cursor: pointer;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .upload-box input[type="file"] {
+            display: none;
+        }
+
+        .upload-box.loaded {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .upload-box.loaded label {
+            color: #10b981;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .ranking-table th {
+            background: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .ranking-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .ranking-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .rank-badge {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+
+        .improvement-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .improvement-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #c33;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3c3;
+            margin-bottom: 20px;
+        }
+
+        .player-detail {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .player-detail:hover {
+            background: #f0f4ff;
+        }
+
+        .consumibles-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .consumible-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 768px) {
+            .upload-section {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ranking-table {
+                font-size: 0.9em;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚔️ WCL TBC Stats</h1>
+            <p>Análise de Evolução de Players e Gear</p>
+        </div>
+
+        <div class="content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-box" id="logsBox">
+                    <label for="logsFile">📋 JSON de Logs WCL</label>
+                    <input type="file" id="logsFile" accept=".json">
+                    <p style="font-size: 0.9em; color: #999; margin-top: 10px;">Arquivo: tbc_logs_*.json</p>
+                </div>
+
+                <div class="upload-box" id="itemsBox">
+                    <label for="itemsFile">📦 JSON de Itens</label>
+                    <input type="file" id="itemsFile" accept=".json">
+                    <p style="font-size: 0.9em; color: #999; margin-top: 10px;">Arquivo: data.json (nexus-devs)</p>
+                </div>
+            </div>
+
+            <div id="messages"></div>
+
+            <!-- Tabs -->
+            <div class="tabs hidden" id="tabsContainer">
+                <button class="tab-btn active" data-tab="overview">📊 Visão Geral</button>
+                <button class="tab-btn" data-tab="ranking">🏆 Ranking</button>
+                <button class="tab-btn" data-tab="timeline">📈 Timeline</button>
+                <button class="tab-btn" data-tab="consumibles">🧪 Consumíveis</button>
+                <button class="tab-btn" data-tab="players">👥 Jogadores</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total de Logs</h3>
+                        <div class="value" id="totalLogs">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total de Lutas</h3>
+                        <div class="value" id="totalFights">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total de Kills</h3>
+                        <div class="value" id="totalKills">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Players Únicos</h3>
+                        <div class="value" id="totalPlayers">0</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h2 style="margin-bottom: 20px;">🎯 Evolução de iLevel Médio</h2>
+                    <div class="chart-container">
+                        <canvas id="ilvlChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ranking Tab -->
+            <div class="tab-content" id="ranking">
+                <h2 style="margin-bottom: 20px;">🏆 Top Players por Melhoria</h2>
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th width="50">Rank</th>
+                            <th>Player</th>
+                            <th>Classe</th>
+                            <th>iLevel Inicial</th>
+                            <th>iLevel Final</th>
+                            <th>Melhoria</th>
+                            <th>Progresso</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rankingBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Timeline Tab -->
+            <div class="tab-content" id="timeline">
+                <h2 style="margin-bottom: 20px;">📈 Timeline de Logs por Data</h2>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Consumibles Tab -->
+            <div class="tab-content" id="consumibles">
+                <h2 style="margin-bottom: 20px;">🧪 Consumíveis Mais Usados</h2>
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th>Consumível</th>
+                            <th>Vezes Usado</th>
+                            <th>% de Players</th>
+                        </tr>
+                    </thead>
+                    <tbody id="consumiblesBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Players Tab -->
+            <div class="tab-content" id="players">
+                <h2 style="margin-bottom: 20px;">👥 Detalhes dos Players</h2>
+                <div id="playersContainer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logsData = null;
+        let itemsData = null;
+        let ilvlChart = null;
+        let timelineChart = null;
+
+        // File uploads
+        document.getElementById('logsFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        logsData = JSON.parse(event.target.result);
+                        document.getElementById('logsBox').classList.add('loaded');
+                        showMessage('✅ Logs carregados com sucesso!', 'success');
+                        if (itemsData) processData();
+                    } catch (err) {
+                        showMessage('❌ Erro ao ler arquivo de logs: ' + err.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        document.getElementById('itemsFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        itemsData = JSON.parse(event.target.result);
+                        document.getElementById('itemsBox').classList.add('loaded');
+                        showMessage('✅ Itens carregados com sucesso!', 'success');
+                        if (logsData) processData();
+                    } catch (err) {
+                        showMessage('❌ Erro ao ler arquivo de itens: ' + err.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        function showMessage(msg, type) {
+            const messagesDiv = document.getElementById('messages');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = msg;
+            messagesDiv.appendChild(div);
+            setTimeout(() => div.remove(), 5000);
+        }
+
+        function processData() {
+            document.getElementById('tabsContainer').classList.remove('hidden');
+
+            // Build item database
+            const itemDb = {};
+            if (Array.isArray(itemsData)) {
+                itemsData.forEach(item => {
+                    if (item.itemId) itemDb[item.itemId] = item.name || 'Unknown';
+                });
+            }
+
+            // Aggregate player data
+            const playerStats = {};
+            const logsByDate = {};
+            let totalFights = 0;
+            let totalKills = 0;
+
+            logsData.forEach(log => {
+                const logDate = new Date(log.date);
+                const dateKey = logDate.toISOString().split('T')[0];
+                logsByDate[dateKey] = (logsByDate[dateKey] || 0) + 1;
+
+                log.boss_fights.forEach(fight => {
+                    totalFights++;
+                    if (fight.kill) totalKills++;
+
+                    fight.players.forEach(player => {
+                        if (!playerStats[player.name]) {
+                            playerStats[player.name] = {
+                                name: player.name,
+                                type: player.type,
+                                spec: player.spec,
+                                role: player.role,
+                                logs: [],
+                                consumiblesUsed: {}
+                            };
+                        }
+
+                        const ilvl = player.avgItemLevel || 0;
+                        playerStats[player.name].logs.push({
+                            date: logDate,
+                            ilvl: ilvl
+                        });
+
+                        // Track consumibles
+                        if (player.consumiveis) {
+                            player.consumiveis.forEach(cons => {
+                                playerStats[player.name].consumiblesUsed[cons.name] = (playerStats[player.name].consumiblesUsed[cons.name] || 0) + 1;
+                            });
+                        }
+                    });
+                });
+            });
+
+            // Update overview stats
+            document.getElementById('totalLogs').textContent = logsData.length;
+            document.getElementById('totalFights').textContent = totalFights;
+            document.getElementById('totalKills').textContent = totalKills;
+            document.getElementById('totalPlayers').textContent = Object.keys(playerStats).length;
+
+            // Calculate improvements
+            const playerImprovements = [];
+            Object.values(playerStats).forEach(player => {
+                if (player.logs.length > 1) {
+                    player.logs.sort((a, b) => a.date - b.date);
+                    const firstIlvl = player.logs[0].ilvl;
+                    const lastIlvl = player.logs[player.logs.length - 1].ilvl;
+                    const improvement = lastIlvl - firstIlvl;
+
+                    playerImprovements.push({
+                        ...player,
+                        firstIlvl,
+                        lastIlvl,
+                        improvement,
+                        improvementPercent: firstIlvl > 0 ? ((improvement / firstIlvl) * 100).toFixed(1) : 0
+                    });
+                }
+            });
+
+            playerImprovements.sort((a, b) => b.improvement - a.improvement);
+
+            // Render ranking
+            const rankingBody = document.getElementById('rankingBody');
+            rankingBody.innerHTML = playerImprovements.slice(0, 20).map((p, i) => `
+                <tr>
+                    <td><span class="rank-badge">${i + 1}</span></td>
+                    <td><strong>${p.name}</strong></td>
+                    <td>${p.type} (${p.spec})</td>
+                    <td>${p.firstIlvl.toFixed(1)}</td>
+                    <td>${p.lastIlvl.toFixed(1)}</td>
+                    <td><strong style="color: ${p.improvement >= 0 ? '#10b981' : '#ef4444'}">+${p.improvement.toFixed(1)}</strong></td>
+                    <td>
+                        <div class="improvement-bar">
+                            <div class="improvement-fill" style="width: ${Math.min(100, p.improvementPercent * 5)}%"></div>
+                        </div>
+                        <small>${p.improvementPercent}%</small>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Consumibles stats
+            const consumiblesCount = {};
+            Object.values(playerStats).forEach(player => {
+                Object.entries(player.consumiblesUsed).forEach(([name, count]) => {
+                    consumiblesCount[name] = (consumiblesCount[name] || 0) + 1;
+                });
+            });
+
+            const topConsumibles = Object.entries(consumiblesCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 15);
+
+            const consumiblesBody = document.getElementById('consumiblesBody');
+            consumiblesBody.innerHTML = topConsumibles.map(([name, count]) => `
+                <tr>
+                    <td>${name}</td>
+                    <td>${count}</td>
+                    <td>${((count / Object.keys(playerStats).length) * 100).toFixed(0)}%</td>
+                </tr>
+            `).join('');
+
+            // Players detail
+            const playersContainer = document.getElementById('playersContainer');
+            playersContainer.innerHTML = playerImprovements.map(p => `
+                <div class="player-detail">
+                    <h3>${p.name}</h3>
+                    <p><small>${p.type} • ${p.role}</small></p>
+                    <p><strong>iLevel:</strong> ${p.firstIlvl.toFixed(1)} → ${p.lastIlvl.toFixed(1)} (${p.improvement >= 0 ? '+' : ''}${p.improvement.toFixed(1)})</p>
+                    <p><strong>Logs participados:</strong> ${p.logs.length}</p>
+                    ${Object.keys(p.consumiblesUsed).length > 0 ? `
+                        <div class="consumibles-list">
+                            ${Object.entries(p.consumiblesUsed).slice(0, 8).map(([name, count]) => 
+                                `<span class="consumible-badge">${name} (${count}x)</span>`
+                            ).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+
+            // Charts
+            const sortedPlayers = playerImprovements.slice(0, 10).sort((a, b) => b.lastIlvl - a.lastIlvl);
+            
+            const ctx1 = document.getElementById('ilvlChart').getContext('2d');
+            if (ilvlChart) ilvlChart.destroy();
+            ilvlChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: sortedPlayers.map(p => p.name),
+                    datasets: [
+                        {
+                            label: 'iLevel Inicial',
+                            data: sortedPlayers.map(p => p.firstIlvl),
+                            backgroundColor: 'rgba(100, 116, 139, 0.5)',
+                        },
+                        {
+                            label: 'iLevel Final',
+                            data: sortedPlayers.map(p => p.lastIlvl),
+                            backgroundColor: 'rgba(102, 126, 234, 1)',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            const dates = Object.keys(logsByDate).sort();
+            const ctx2 = document.getElementById('timelineChart').getContext('2d');
+            if (timelineChart) timelineChart.destroy();
+            timelineChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Logs por Data',
+                        data: dates.map(d => logsByDate[d] || 0),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    </script>
+</body>
+</html>
