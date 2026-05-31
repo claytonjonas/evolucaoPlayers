@@ -469,7 +469,10 @@
             let totalKills = 0;
 
             logsData.forEach(log => {
-                const logDate = new Date(log.date);
+                // Parse formato "28/05/2026 20:34" para Date
+                const [datePart, timePart] = log.date.split(' ');
+                const [dia, mes, ano] = datePart.split('/');
+                const logDate = new Date(ano, mes - 1, dia);
                 const dateKey = logDate.toISOString().split('T')[0];
                 logsByDate[dateKey] = (logsByDate[dateKey] || 0) + 1;
 
@@ -490,8 +493,9 @@
                         }
 
                         const ilvl = player.avgItemLevel || 0;
+                        const dateISO = logDate.toISOString().split('T')[0];
                         playerStats[player.name].logs.push({
-                            date: logDate,
+                            date: dateISO,
                             ilvl: ilvl
                         });
 
@@ -515,7 +519,7 @@
             const playerImprovements = [];
             Object.values(playerStats).forEach(player => {
                 if (player.logs.length > 1) {
-                    player.logs.sort((a, b) => a.date - b.date);
+                    player.logs.sort((a, b) => a.date.localeCompare(b.date));
                     const firstIlvl = player.logs[0].ilvl;
                     const lastIlvl = player.logs[player.logs.length - 1].ilvl;
                     const improvement = lastIlvl - firstIlvl;
