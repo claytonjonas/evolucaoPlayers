@@ -3,9 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WCL TBC Stats - Análise de Evolução de Players</title>
+    <title>Ainda Estamos Aqui - Análise de Evolução</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
+        @font-face {
+            font-family: "LifeCraft";
+            src: url("https://raw.githubusercontent.com/claytonjonas/fontwow/main/LifeCraft_Font.ttf") format("truetype");
+            font-display: swap;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,68 +21,84 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            background: url("https://bnetcmsus-a.akamaihd.net/cms/blog_header/15/154R55EBRA3S1763416975589.png")
+                        center center / cover no-repeat fixed;
+            font-family: "Inter", system-ui, sans-serif;
+            color: #e5e5e5;
+            position: relative;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 0;
         }
 
         .container {
             max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin: 50px auto;
+            background: #14161c;
+            border: 1px solid #262a35;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
             overflow: hidden;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
+            background: linear-gradient(135deg, #2c6cb0 0%, #1f4e7a 100%);
+            padding: 40px;
             text-align: center;
+            border-bottom: 1px solid #262a35;
         }
 
         .header h1 {
-            font-size: 2.5em;
+            font-family: "LifeCraft", serif;
+            font-size: 2.8em;
+            color: #f0d86b;
             margin-bottom: 10px;
         }
 
         .header p {
-            opacity: 0.9;
+            color: #cfd6ff;
             font-size: 1.1em;
+            opacity: 0.9;
         }
 
         .content {
-            padding: 30px;
+            padding: 40px;
         }
 
         .upload-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
 
         .upload-box {
-            border: 2px dashed #667eea;
+            border: 2px dashed #69ccf0;
             border-radius: 8px;
-            padding: 20px;
+            padding: 30px;
             text-align: center;
+            background: #0f1117;
             transition: all 0.3s;
         }
 
         .upload-box:hover {
-            border-color: #764ba2;
-            background: #f0f4ff;
+            border-color: #f0d86b;
+            background: #1a1d27;
         }
 
         .upload-box label {
             display: block;
             cursor: pointer;
             font-weight: 600;
-            color: #667eea;
+            color: #69ccf0;
             margin-bottom: 10px;
+            font-size: 1.1em;
         }
 
         .upload-box input[type="file"] {
@@ -83,18 +107,25 @@
 
         .upload-box.loaded {
             border-color: #10b981;
-            background: #ecfdf5;
+            background: #0f2f1f;
         }
 
         .upload-box.loaded label {
             color: #10b981;
         }
 
+        .upload-box p {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 10px;
+        }
+
         .tabs {
             display: flex;
             gap: 0;
-            border-bottom: 2px solid #e5e7eb;
-            margin-bottom: 20px;
+            border-bottom: 2px solid #262a35;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
         }
 
         .tab-btn {
@@ -104,15 +135,19 @@
             cursor: pointer;
             font-size: 1em;
             font-weight: 600;
-            color: #6b7280;
+            color: #888;
             transition: all 0.3s;
             border-bottom: 3px solid transparent;
             margin-bottom: -2px;
         }
 
         .tab-btn.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+            color: #f0d86b;
+            border-bottom-color: #f0d86b;
+        }
+
+        .tab-btn:hover {
+            color: #69ccf0;
         }
 
         .tab-content {
@@ -127,112 +162,146 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
+            background: linear-gradient(135deg, #2c6cb0 0%, #1f4e7a 100%);
+            padding: 25px;
             border-radius: 8px;
+            border: 1px solid #3d5a7a;
             text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
         }
 
         .stat-card h3 {
             font-size: 0.9em;
-            opacity: 0.9;
+            color: #cfd6ff;
             margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .stat-card .value {
             font-size: 2.5em;
             font-weight: bold;
+            color: #f0d86b;
         }
 
         .ranking-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            border: 1px solid #262a35;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         .ranking-table th {
-            background: #f3f4f6;
-            padding: 12px;
+            background: #0f1117;
+            padding: 15px;
             text-align: left;
             font-weight: 600;
-            border-bottom: 2px solid #e5e7eb;
+            color: #f0d86b;
+            border-bottom: 2px solid #262a35;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
         }
 
         .ranking-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 15px;
+            border-bottom: 1px solid #262a35;
+            color: #e5e5e5;
         }
 
         .ranking-table tr:hover {
-            background: #f9fafb;
+            background: #1a1d27;
         }
 
         .rank-badge {
             display: inline-block;
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: #667eea;
-            color: white;
+            background: linear-gradient(135deg, #2c6cb0 0%, #1f4e7a 100%);
+            color: #f0d86b;
             text-align: center;
-            line-height: 30px;
+            line-height: 32px;
             font-weight: bold;
-            font-size: 0.8em;
+            font-size: 0.9em;
+            border: 1px solid #3d5a7a;
         }
 
         .improvement-bar {
-            background: #e5e7eb;
+            background: #0f1117;
             height: 8px;
             border-radius: 4px;
             overflow: hidden;
+            border: 1px solid #262a35;
         }
 
         .improvement-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            transition: width 0.3s;
+            background: linear-gradient(90deg, #69ccf0 0%, #f0d86b 100%);
         }
 
         .chart-container {
             position: relative;
             height: 300px;
-            margin-top: 20px;
+            margin-top: 30px;
+            background: #0f1117;
+            border: 1px solid #262a35;
+            border-radius: 8px;
+            padding: 20px;
         }
 
         .error {
-            background: #fee;
-            color: #c33;
+            background: #2f1f1f;
+            color: #ff6b6b;
             padding: 15px;
             border-radius: 8px;
-            border-left: 4px solid #c33;
+            border-left: 4px solid #ff6b6b;
             margin-bottom: 20px;
         }
 
         .success {
-            background: #efe;
-            color: #3c3;
+            background: #1f2f1f;
+            color: #10b981;
             padding: 15px;
             border-radius: 8px;
-            border-left: 4px solid #3c3;
+            border-left: 4px solid #10b981;
             margin-bottom: 20px;
         }
 
         .player-detail {
-            background: #f9fafb;
-            padding: 15px;
+            background: #0f1117;
+            padding: 20px;
             border-radius: 8px;
             margin-bottom: 15px;
             cursor: pointer;
             transition: all 0.3s;
+            border: 1px solid #262a35;
         }
 
         .player-detail:hover {
-            background: #f0f4ff;
+            border-color: #69ccf0;
+            background: #1a1d27;
+        }
+
+        .player-detail h3 {
+            color: #f0d86b;
+            margin-bottom: 8px;
+        }
+
+        .player-detail p {
+            color: #cfd6ff;
+            margin: 5px 0;
+            font-size: 0.95em;
         }
 
         .consumibles-list {
@@ -243,11 +312,24 @@
         }
 
         .consumible-badge {
-            background: #dbeafe;
-            color: #1e40af;
-            padding: 4px 8px;
+            background: linear-gradient(135deg, #2c6cb0 0%, #1f4e7a 100%);
+            color: #69ccf0;
+            padding: 4px 10px;
             border-radius: 4px;
             font-size: 0.85em;
+            border: 1px solid #3d5a7a;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        h2 {
+            color: #f0d86b;
+            margin: 30px 0 20px 0;
+            font-size: 1.5em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         @media (max-width: 768px) {
@@ -255,29 +337,41 @@
                 grid-template-columns: 1fr;
             }
 
-            .header h1 {
-                font-size: 1.8em;
-            }
-
             .stats-grid {
                 grid-template-columns: 1fr;
             }
 
-            .ranking-table {
-                font-size: 0.9em;
+            .tabs {
+                flex-direction: column;
             }
-        }
 
-        .hidden {
-            display: none;
+            .tab-btn {
+                width: 100%;
+                border-bottom: 3px solid #262a35;
+                margin-bottom: 0;
+            }
+
+            .tab-btn.active {
+                border-bottom-color: #f0d86b;
+            }
+
+            .container {
+                margin: 20px;
+            }
+
+            .content {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="bg-overlay"></div>
+
     <div class="container">
         <div class="header">
-            <h1>⚔️ WCL TBC Stats</h1>
-            <p>Análise de Evolução de Players e Gear</p>
+            <h1>⚔️ Evolução de Players</h1>
+            <p>Ainda Estamos Aqui - TBC Classic</p>
         </div>
 
         <div class="content">
@@ -286,13 +380,13 @@
                 <div class="upload-box" id="logsBox">
                     <label for="logsFile">📋 JSON de Logs WCL</label>
                     <input type="file" id="logsFile" accept=".json">
-                    <p style="font-size: 0.9em; color: #999; margin-top: 10px;">Arquivo: tbc_logs_*.json</p>
+                    <p>Arquivo: tbc_logs_*.json</p>
                 </div>
 
                 <div class="upload-box" id="itemsBox">
                     <label for="itemsFile">📦 JSON de Itens</label>
                     <input type="file" id="itemsFile" accept=".json">
-                    <p style="font-size: 0.9em; color: #999; margin-top: 10px;">Arquivo: data.json (nexus-devs)</p>
+                    <p>Arquivo: data.json (nexus-devs)</p>
                 </div>
             </div>
 
@@ -328,17 +422,15 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 30px;">
-                    <h2 style="margin-bottom: 20px;">🎯 Evolução de iLevel Médio</h2>
-                    <div class="chart-container">
-                        <canvas id="ilvlChart"></canvas>
-                    </div>
+                <h2>⚡ Evolução de iLevel Médio</h2>
+                <div class="chart-container">
+                    <canvas id="ilvlChart"></canvas>
                 </div>
             </div>
 
             <!-- Ranking Tab -->
             <div class="tab-content" id="ranking">
-                <h2 style="margin-bottom: 20px;">🏆 Top Players por Melhoria</h2>
+                <h2>🏆 Top Players por Melhoria</h2>
                 <table class="ranking-table">
                     <thead>
                         <tr>
@@ -358,7 +450,7 @@
 
             <!-- Timeline Tab -->
             <div class="tab-content" id="timeline">
-                <h2 style="margin-bottom: 20px;">📈 Timeline de Logs por Data</h2>
+                <h2>📈 Timeline de Logs por Data</h2>
                 <div class="chart-container">
                     <canvas id="timelineChart"></canvas>
                 </div>
@@ -366,7 +458,7 @@
 
             <!-- Consumibles Tab -->
             <div class="tab-content" id="consumibles">
-                <h2 style="margin-bottom: 20px;">🧪 Consumíveis Mais Usados</h2>
+                <h2>🧪 Consumíveis Mais Usados</h2>
                 <table class="ranking-table">
                     <thead>
                         <tr>
@@ -382,7 +474,7 @@
 
             <!-- Players Tab -->
             <div class="tab-content" id="players">
-                <h2 style="margin-bottom: 20px;">👥 Detalhes dos Players</h2>
+                <h2>👥 Detalhes dos Players</h2>
                 <div id="playersContainer">
                 </div>
             </div>
@@ -545,7 +637,7 @@
                     <td>${p.type} (${p.spec})</td>
                     <td>${p.firstIlvl.toFixed(1)}</td>
                     <td>${p.lastIlvl.toFixed(1)}</td>
-                    <td><strong style="color: ${p.improvement >= 0 ? '#10b981' : '#ef4444'}">+${p.improvement.toFixed(1)}</strong></td>
+                    <td><strong style="color: ${p.improvement >= 0 ? '#10b981' : '#ff6b6b'}">${p.improvement >= 0 ? '+' : ''}${p.improvement.toFixed(1)}</strong></td>
                     <td>
                         <div class="improvement-bar">
                             <div class="improvement-fill" style="width: ${Math.min(100, p.improvementPercent * 5)}%"></div>
@@ -587,7 +679,7 @@
                     ${Object.keys(p.consumiblesUsed).length > 0 ? `
                         <div class="consumibles-list">
                             ${Object.entries(p.consumiblesUsed).slice(0, 8).map(([name, count]) => 
-                                `<span class="consumible-badge">${name} (${count}x)</span>`
+                                `<span class="consumible-badge">${name}</span>`
                             ).join('')}
                         </div>
                     ` : ''}
@@ -608,11 +700,15 @@
                             label: 'iLevel Inicial',
                             data: sortedPlayers.map(p => p.firstIlvl),
                             backgroundColor: 'rgba(100, 116, 139, 0.5)',
+                            borderColor: 'rgba(100, 116, 139, 1)',
+                            borderWidth: 1
                         },
                         {
                             label: 'iLevel Final',
                             data: sortedPlayers.map(p => p.lastIlvl),
-                            backgroundColor: 'rgba(102, 126, 234, 1)',
+                            backgroundColor: 'rgba(240, 216, 107, 0.8)',
+                            borderColor: 'rgba(240, 216, 107, 1)',
+                            borderWidth: 1
                         }
                     ]
                 },
@@ -620,7 +716,20 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { beginAtZero: true }
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#cfd6ff' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#cfd6ff' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#cfd6ff' }
+                        }
                     }
                 }
             });
@@ -635,15 +744,35 @@
                     datasets: [{
                         label: 'Logs por Data',
                         data: dates.map(d => logsByDate[d] || 0),
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderColor: '#f0d86b',
+                        backgroundColor: 'rgba(240, 216, 107, 0.1)',
                         tension: 0.3,
-                        fill: true
+                        fill: true,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#f0d86b',
+                        pointBorderColor: '#14161c',
+                        pointBorderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#cfd6ff' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#cfd6ff' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#cfd6ff' }
+                        }
+                    }
                 }
             });
         }
